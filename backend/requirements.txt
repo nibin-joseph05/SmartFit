@@ -6,6 +6,7 @@ colorama==0.4.6
 fastapi==0.136.1
 h11==0.16.0
 idna==3.13
+mediapipe>=0.10.21
 numpy==2.4.4
 opencv-python==4.13.0.92
 pydantic==2.13.3

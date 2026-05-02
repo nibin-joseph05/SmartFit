@@ -1,11 +1,11 @@
 class FitResult {
-  final String recommendedSize;
-  final String fitClassification;
+  final String generatedImageUrl;
+  final String message;
   final double confidence;
 
   FitResult({
-    required this.recommendedSize,
-    required this.fitClassification,
+    required this.generatedImageUrl,
+    required this.message,
     required this.confidence,
   });
 }

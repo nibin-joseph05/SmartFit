@@ -8,16 +8,12 @@ class FitRepository {
   FitRepository(this.remoteDataSource);
 
   Future<FitResult> analyzeFit({
-    required double height,
-    required double weight,
-    required String dressType,
-    required File imageFile,
+    required File personImage,
+    required File garmentImage,
   }) async {
     return await remoteDataSource.analyzeFit(
-      height: height,
-      weight: weight,
-      dressType: dressType,
-      imageFile: imageFile,
+      personImage: personImage,
+      garmentImage: garmentImage,
     );
   }
 }

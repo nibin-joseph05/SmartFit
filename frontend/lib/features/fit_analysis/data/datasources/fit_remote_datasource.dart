@@ -9,19 +9,22 @@ class FitRemoteDataSource {
   FitRemoteDataSource(this._client);
 
   Future<FitResponseModel> analyzeFit({
-    required double height,
-    required double weight,
-    required String dressType,
-    required File imageFile,
+    required File personImage,
+    required File garmentImage,
   }) async {
     final formData = FormData.fromMap({
-      'height': height,
-      'weight': weight,
-      'dress_type': dressType,
-      'image': await MultipartFile.fromFile(imageFile.path, filename: 'upload.jpg'),
+      'person_image': await MultipartFile.fromFile(personImage.path, filename: 'person.jpg'),
+      'garment_image': await MultipartFile.fromFile(garmentImage.path, filename: 'garment.jpg'),
     });
 
-    final response = await _client.dio.post('/fit/analyze', data: formData);
+    final response = await _client.dio.post(
+      '/fit/analyze',
+      data: formData,
+      options: Options(
+        receiveTimeout: const Duration(minutes: 2),
+        sendTimeout: const Duration(minutes: 2),
+      ),
+    );
     return FitResponseModel.fromJson(response.data);
   }
 }

@@ -1,18 +1,17 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Request
 from app.schemas.fit import FitAnalysisResponse
-from app.services.fit_service import analyze_fit
+from app.services.fit_service import analyze_virtual_try_on
 
 router = APIRouter()
 
 @router.post("/analyze", response_model=FitAnalysisResponse)
 async def analyze(
-    height: float = Form(...),
-    weight: float = Form(...),
-    dress_type: str = Form(...),
-    image: UploadFile = File(...)
+    request: Request,
+    person_image: UploadFile = File(...),
+    garment_image: UploadFile = File(...)
 ):
-    image_bytes = await image.read()
+    base_url = str(request.base_url).rstrip("/")
     
-    result = analyze_fit(height, weight, dress_type, image_bytes)
+    result = await analyze_virtual_try_on(person_image, garment_image, base_url)
     
     return FitAnalysisResponse(**result)

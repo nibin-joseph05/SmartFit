@@ -1,4 +1,6 @@
 backend/venv
+backend/uploads/
+frontend/assets/
 
 # Python
 __pycache__/

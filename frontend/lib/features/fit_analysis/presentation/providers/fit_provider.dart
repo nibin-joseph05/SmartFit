@@ -25,18 +25,14 @@ class FitNotifier extends StateNotifier<AsyncValue<FitResult?>> {
   FitNotifier(this._repository) : super(const AsyncValue.data(null));
 
   Future<void> analyzeFit({
-    required double height,
-    required double weight,
-    required String dressType,
-    required File imageFile,
+    required File personImage,
+    required File garmentImage,
   }) async {
     state = const AsyncValue.loading();
     try {
       final result = await _repository.analyzeFit(
-        height: height,
-        weight: weight,
-        dressType: dressType,
-        imageFile: imageFile,
+        personImage: personImage,
+        garmentImage: garmentImage,
       );
       state = AsyncValue.data(result);
     } catch (e, st) {

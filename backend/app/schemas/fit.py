@@ -1,6 +1,7 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class FitAnalysisResponse(BaseModel):
-    recommended_size: str
-    fit_classification: str
-    confidence: float
+    generated_image_url: str
+    message: str
+    confidence: Optional[float] = None
