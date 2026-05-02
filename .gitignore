@@ -1,1 +1,11 @@
 backend/venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+.env
+
+# Android/Kotlin
+.kotlin/
