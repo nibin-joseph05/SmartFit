@@ -15,9 +15,12 @@ final fitRepositoryProvider = Provider((ref) {
   return FitRepository(ref.read(fitRemoteDataSourceProvider));
 });
 
-final fitProvider = StateNotifierProvider<FitNotifier, AsyncValue<FitResult?>>((ref) {
+final fitProvider =
+    StateNotifierProvider<FitNotifier, AsyncValue<FitResult?>>((ref) {
   return FitNotifier(ref.read(fitRepositoryProvider));
 });
+
+final garmentTypeProvider = StateProvider<String>((ref) => 'top');
 
 class FitNotifier extends StateNotifier<AsyncValue<FitResult?>> {
   final FitRepository _repository;
@@ -27,12 +30,14 @@ class FitNotifier extends StateNotifier<AsyncValue<FitResult?>> {
   Future<void> analyzeFit({
     required File personImage,
     required File garmentImage,
+    required String garmentType,         
   }) async {
     state = const AsyncValue.loading();
     try {
       final result = await _repository.analyzeFit(
-        personImage: personImage,
+        personImage:  personImage,
         garmentImage: garmentImage,
+        garmentType:  garmentType,      
       );
       state = AsyncValue.data(result);
     } catch (e, st) {

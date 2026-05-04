@@ -3,18 +3,21 @@ import numpy as np
 
 def extract_garment_mask(garment: np.ndarray) -> np.ndarray:
     if garment.shape[2] == 4:
-        return garment[:, :, 3]
+        alpha = garment[:, :, 3]
+        if cv2.countNonZero(alpha) > alpha.size * 0.1:
+            return alpha
 
     hsv = cv2.cvtColor(garment, cv2.COLOR_BGR2HSV)
-    lower_white = np.array([0, 0, 200])
-    upper_white = np.array([180, 30, 255])
-    white_mask = cv2.inRange(hsv, lower_white, upper_white)
 
-    lower_light = np.array([0, 0, 240])
-    upper_light = np.array([180, 15, 255])
-    light_mask = cv2.inRange(hsv, lower_light, upper_light)
+    lower_white = np.array([0,   0, 190])
+    upper_white = np.array([180, 40, 255])
+    white_mask  = cv2.inRange(hsv, lower_white, upper_white)
 
-    bg_mask = cv2.bitwise_or(white_mask, light_mask)
+    lower_grey = np.array([0,  0, 220])
+    upper_grey = np.array([180, 20, 255])
+    grey_mask  = cv2.inRange(hsv, lower_grey, upper_grey)
+
+    bg_mask = cv2.bitwise_or(white_mask, grey_mask)
 
     gray = cv2.cvtColor(garment, cv2.COLOR_BGR2GRAY)
     edge = cv2.Canny(gray, 30, 100)
@@ -30,9 +33,13 @@ def extract_garment_mask(garment: np.ndarray) -> np.ndarray:
     contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         largest = max(contours, key=cv2.contourArea)
-        clean_mask = np.zeros_like(fg_mask)
-        cv2.drawContours(clean_mask, [largest], -1, 255, -1)
-        fg_mask = clean_mask
+        if cv2.contourArea(largest) > 500:
+            clean_mask = np.zeros_like(fg_mask)
+            cv2.drawContours(clean_mask, [largest], -1, 255, -1)
+            fg_mask = clean_mask
+
+    if cv2.countNonZero(fg_mask) < fg_mask.size * 0.05:
+        fg_mask[:] = 255
 
     fg_mask = cv2.GaussianBlur(fg_mask, (5, 5), 0)
     return fg_mask

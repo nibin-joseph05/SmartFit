@@ -45,30 +45,67 @@ def detect_body_landmarks(image: np.ndarray) -> Optional[Tuple[List, Optional[np
         return landmarks, seg_mask
     return None, None
 
-def get_torso_quad(
-    landmarks: List, img_h: int, img_w: int
+def get_garment_quad(
+    landmarks: List, img_h: int, img_w: int, garment_aspect_ratio: float
 ) -> Tuple[np.ndarray, float]:
-    LEFT_SHOULDER = 11
-    RIGHT_SHOULDER = 12
-    LEFT_HIP = 23
-    RIGHT_HIP = 24
+    """
+    garment_aspect_ratio = height / width
+    > 1.5  → full-length dress (quad reaches ankles)
+    <= 1.5 → top/shirt (quad reaches hips)
+    """
+    LEFT_SHOULDER  = 11   
+    RIGHT_SHOULDER = 12   
+    LEFT_HIP       = 23
+    RIGHT_HIP      = 24
+    LEFT_ANKLE     = 27
+    RIGHT_ANKLE    = 28
 
     lsx, lsy, ls_vis = landmarks[LEFT_SHOULDER]
     rsx, rsy, rs_vis = landmarks[RIGHT_SHOULDER]
     lhx, lhy, lh_vis = landmarks[LEFT_HIP]
     rhx, rhy, rh_vis = landmarks[RIGHT_HIP]
+    lax, lay, la_vis = landmarks[LEFT_ANKLE]
+    rax, ray, ra_vis = landmarks[RIGHT_ANKLE]
 
-    min_vis = min(ls_vis, rs_vis, lh_vis, rh_vis)
+    confidence = min(ls_vis, rs_vis)
+    shoulder_w = abs(lsx - rsx)
 
-    shoulder_w = abs(rsx - lsx)
-    pad_x = int(shoulder_w * 0.25)
-    pad_y_top = int(shoulder_w * 0.05)
-    pad_y_bottom = int(shoulder_w * 0.08)
+    img_left_x  = min(lsx, rsx)   
+    img_right_x = max(lsx, rsx)   
+    shoulder_y  = int((lsy + rsy) / 2)
 
-    tl = (max(0, lsx - pad_x), max(0, lsy - pad_y_top))
-    tr = (min(img_w, rsx + pad_x), max(0, rsy - pad_y_top))
-    bl = (max(0, lhx - pad_x), min(img_h, lhy + pad_y_bottom))
-    br = (min(img_w, rhx + pad_x), min(img_h, rhy + pad_y_bottom))
+    pad_x     = int(shoulder_w * 0.28)
+    pad_y_top = int(shoulder_w * 0.08)
+
+    top_y = max(0, shoulder_y - pad_y_top)
+
+    if garment_aspect_ratio > 1.5:
+        if la_vis > 0.3 and ra_vis > 0.3:
+            bottom_y = int(max(lay, ray)) + int(shoulder_w * 0.15)
+        elif lh_vis > 0.3 and rh_vis > 0.3:
+            hip_y    = int((lhy + rhy) / 2)
+            torso_h  = hip_y - shoulder_y
+            bottom_y = int(hip_y + torso_h * 2.0)
+        else:
+            bottom_y = int(img_h * 0.92)
+
+        bottom_y = min(bottom_y, img_h - 5)
+
+        pad_x = int(shoulder_w * 0.45)
+    else:
+        if lh_vis < 0.3 or rh_vis < 0.3:
+            bottom_y = shoulder_y + int(shoulder_w * 2.2)
+        else:
+            bottom_y = int((lhy + rhy) / 2) + int(shoulder_w * 0.1)
+        bottom_y = min(bottom_y, img_h - 5)
+
+    tl = (max(0,     img_left_x  - pad_x), top_y)
+    tr = (min(img_w, img_right_x + pad_x), top_y)
+    br = (min(img_w, img_right_x + pad_x), bottom_y)
+    bl = (max(0,     img_left_x  - pad_x), bottom_y)
 
     quad = np.array([tl, tr, br, bl], dtype=np.float32)
-    return quad, min_vis
+    return quad, confidence
+
+def get_torso_quad(landmarks, img_h, img_w):
+    return get_garment_quad(landmarks, img_h, img_w, garment_aspect_ratio=1.0)
